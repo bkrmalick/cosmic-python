@@ -30,3 +30,34 @@ def allocate_endpoint():
         return {"message": str(e)}, 400
 
     return {"batchref": batchref}, 201
+
+@app.route("/deallocate", methods=["POST"])
+def deallocate_endpoint():
+    session = get_session()
+    repo = repository.SqlAlchemyRepository(session)
+
+    line = session.query(model.OrderLine).filter_by(
+        orderid = request.json["orderid"],
+        sku = request.json["sku"],
+    ).one()
+
+    services.deallocate(line, repo, session)
+
+    return {}, 201
+
+@app.route("/add-batch", methods=["POST"])
+def add_batch_endpoint():
+    session = get_session()
+    repo = repository.SqlAlchemyRepository(session)
+    batch_ref = request.json["ref"]
+
+    services.add_batch(
+        batch_ref, 
+        request.json["sku"], 
+        request.json["qty"], 
+        request.json["eta"], 
+        repo, 
+        session,
+    )
+
+    return {"ref": batch_ref}, 201

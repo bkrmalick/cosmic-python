@@ -29,12 +29,14 @@ def session(in_memory_db):
 
 def wait_for_postgres_to_come_up(engine):
     deadline = time.time() + 10
-    while time.time() < deadline:
+    while True:
         try:
             return engine.connect()
         except OperationalError:
-            time.sleep(0.5)
-    pytest.fail("Postgres never came up")
+            if time.time() < deadline:
+                time.sleep(0.5)
+            else:
+                raise
 
 
 def wait_for_webapp_to_come_up():
